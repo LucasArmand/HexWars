@@ -23,8 +23,8 @@ body {
     height: 2px;
     opacity: 40%;
     border-radius: 5px;
-    min-width: 90%; /* Set a fixed width */
-    margin: 2px auto; /* Center horizontally */
+    min-width: 90%;
+    margin: 2px auto;
 }
 
 .canvas-div {
@@ -32,7 +32,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* Prevent overflow if the canvas grows unexpectedly */
+    overflow: hidden;
 }
 
 canvas {

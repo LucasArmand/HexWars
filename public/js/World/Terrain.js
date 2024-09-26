@@ -1,5 +1,6 @@
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.module.js';
+import * as THREE from '../three.module.js'
 import { Perlin } from "./Perlin.js"
+import { WorldUtils } from './WorldUtils.js';
 
 
 export class Terrain {
@@ -8,13 +9,24 @@ export class Terrain {
         this.height = height;
         this.resolutionPerUnit = resolutionPerUnit;
         this.noise = new Perlin();
-
+        this.tileGrid = null;
         this.mesh = this.generateTerrainMesh();
+    }
+    
+    attatchTileGrid(tileGrid) {
+      this.tileGrid = tileGrid;
+      tileGrid.terrain = this;
+    }
+
+    getCenter() {
+      let size = WorldUtils.getTerrainSize(this);
+      return new THREE.Vector3(size.x / 2, size.y / 2, 0);
     }
     elevationFunction(x, y) {
 
-        return this.noise.noise(10 * x, 10 * y) * 0.0;
+        return this.noise.noise(10 * x, 10 * y) * 0.1;
     }
+
     generateTerrainMesh() {
         // Calculate the number of vertices in the x and y directions
         const widthSegments = Math.floor(this.width * this.resolutionPerUnit);

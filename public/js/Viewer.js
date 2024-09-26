@@ -1,11 +1,21 @@
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.module.js';
+import * as THREE from './three.module.js'
 import { CameraControls } from './CameraControls.js';
 import { Tile } from './World/Tile.js'
 import { WorldUtils } from "./World/WorldUtils.js"
 import { Terrain } from "./World/Terrain.js"
+import { TileGrid } from './World/TileGrid.js'
+
+
 
 let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+let width = 40
+let height = 50;
+//let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+let tileRenderTarget = new THREE.WebGLRenderTarget(width, height); 
+//let camera = new THREE.OrthographicCamera(-width, width, -height, height, 0.1, 20);
+
 
 // Get the canvas element and its parent div
 const canvas = document.querySelector('canvas');
@@ -13,26 +23,56 @@ const canvasDiv = document.querySelector('.canvas-div');
 
 // Create a renderer and attach it to the canvas
 let renderer = new THREE.WebGLRenderer({ canvas });
-resizeCanvas(); // Set the initial size of the canvas based on the canvas-div
+ // Set the initial size of the canvas based on the canvas-div
 scene.background = new THREE.Color(0x000000); // Set background color for the scene
-camera.position.z = 2;
-camera.rotation.x = THREE.MathUtils.degToRad(15);
+//camera.position.x = width/1.2;
+//camera.position.y = height/Math.sqrt(3);
+//camera.position.z = 5;
+//camera.rotation.z = THREE.MathUtils.degToRad(0);
+//camera.rotation.x = THREE.MathUtils.degToRad(0);
 
-const cameraControls = new CameraControls(camera, 0.1);
+// Create an orthographic camera
 
-let width = 40
-let height = 50;
+// Update the camera projection matrix after setting its properties
 
-let grid = WorldUtils.generateHexGrid(width, height, 1.0);
-for (let tile of grid) {
+
+
+let terrainSize = WorldUtils.calculateTerrainSize(height, width)
+let terrainOrigin = new THREE.Vector2(-Math.sqrt(3)/ 2, -1);
+let terrain = new Terrain(terrainSize.x, terrainSize.y, 10);
+let grid = new TileGrid(width, height, 1.0);
+terrain.attatchTileGrid(grid);
+grid.generateHexGrid();
+for (let tile of grid.grid) {
     scene.add(tile.mesh);
 }
 
-let terrainSize = WorldUtils.calculateTerrainSize(width, height)
-let terrain = new Terrain(terrainSize.x, terrainSize.y, 10);
+const markerGeometry = new THREE.SphereGeometry(0.1, 32, 32);  // Small sphere
+const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
+const marker = new THREE.Mesh(markerGeometry, markerMaterial);
 
-terrain.mesh.position.set(terrainSize.x / 2 - Math.sqrt(3) / 2, terrainSize.y / 2 - 1,  0);
+
+
+terrain.mesh.position.set(terrainSize.x / 2 + terrainOrigin.x, terrainSize.y / 2 + terrainOrigin.y,  0);
+
 scene.add(terrain.mesh);
+
+const left = -terrainSize.x / 2;
+const right = terrainSize.x / 2;
+const top = terrainSize.y / 2;
+const bottom = -terrainSize.y / 2;
+const near = 0.1;   // Adjust near plane as needed
+const far = 1000;   // Adjust far plane as needed
+
+
+const camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
+
+// Set camera position and orientation to look at the x-y plane
+camera.position.set(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 10); // Move the camera along the z-axis
+camera.lookAt(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 0);        // Look at the center of the plane
+camera.updateProjectionMatrix();
+
+const cameraControls = new CameraControls(camera, 0.1);
 
 const axesHelper = new THREE.AxesHelper( 5 );
 scene.add( axesHelper );
@@ -49,7 +89,9 @@ directionalLight.target.position.set(5, 0, 0);
 // Add the light to the scene
 scene.add(directionalLight);
 // Listen for window resize and adjust the canvas size
+resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+
 
 function animate() {
     requestAnimationFrame(animate);
