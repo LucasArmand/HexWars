@@ -45,9 +45,17 @@ export class WorldUtils {
         */
         let x = coordinate.x;
         let y = coordinate.y;
+
+        // determine if the lower bound is even or odd
         let lowerIsEven = Math.floor(y / 1.5) % 2 == 0;
+
+        // decide the even and odd y-values
         let evenBound = lowerIsEven ? Math.floor(y / 1.5) * 1.5 : Math.ceil(y / 1.5) * 1.5;
         let oddBound = lowerIsEven ? Math.ceil(y / 1.5) * 1.5 : Math.floor(y / 1.5) * 1.5;
+
+        // Boundary condition, when the y-value lines up with the hex y-values,
+        // we get equal even and odd bounds. We split them by deciding whether to
+        // increment the even or odd bound based on previous logic.
         if (evenBound == oddBound) {
             if (lowerIsEven) {
                 oddBound = oddBound + 1.5;
@@ -57,18 +65,22 @@ export class WorldUtils {
 
         }
         
+        // calculate left and right bounds for both even and odd rows
         let leftEvenBound = Math.floor(x / Math.sqrt(3)) * Math.sqrt(3);
         let leftOddBound = Math.floor((x - Math.sqrt(3) / 2.0 ) / Math.sqrt(3)) * Math.sqrt(3) + Math.sqrt(3) / 2.0;
 
         let rightEvenBound = Math.ceil(x / Math.sqrt(3)) * Math.sqrt(3);
         let rightOddBound = Math.ceil((x - Math.sqrt(3) / 2.0 ) / Math.sqrt(3)) * Math.sqrt(3) + Math.sqrt(3) / 2.0;
 
+        // list all four possible nearest hex centers
         let points = []
         points = [new THREE.Vector3(leftEvenBound, evenBound, 0),
-                      new THREE.Vector3(rightEvenBound, evenBound, 0),
-                      new THREE.Vector3(leftOddBound, oddBound, 0),
-                      new THREE.Vector3(rightOddBound, oddBound, 0)
+                  new THREE.Vector3(rightEvenBound, evenBound, 0),
+                  new THREE.Vector3(leftOddBound, oddBound, 0),
+                  new THREE.Vector3(rightOddBound, oddBound, 0)
         ]
+
+        // get closest hex center
         let minDistance = radius;
         let minCenter = null;
         for (let point of points) {
