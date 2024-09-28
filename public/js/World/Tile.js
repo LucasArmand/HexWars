@@ -23,11 +23,36 @@ export class Tile {
         0.8660253882408142, 0.5, 0
     ]
 
-    constructor(position=new THREE.Vector3(0,0,0), radius=1.0) {
+    static Type = Object.freeze({
+        WATER: 'WATER',
+        LAND: 'LAND'
+      });
+      
+
+    constructor(position = new THREE.Vector3(0,0,0), coordinate=[0,0], radius=1.0, tileType=Tile.Type.LAND) {
         this.position = position;
+        this.coordinate = coordinate;
         this.radius = radius;
         this.mesh = this.generateMesh();
+        this.height = 0.0;
+        this.type = tileType;
 
+    }
+
+    getHeight() {
+        if (this.type == Tile.Type.LAND) {
+            return 2.0;
+        } else {
+            return 0.5;
+        }
+    }
+
+    getColor() {
+        if (this.type == Tile.Type.LAND) {
+            return new THREE.Color(0, 127, 0);
+        } else {
+            return new THREE.Color(0, 0, 127);
+        }
     }
 
     generateMesh() {

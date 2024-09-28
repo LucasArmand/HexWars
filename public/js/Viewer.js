@@ -4,13 +4,13 @@ import { Tile } from './World/Tile.js'
 import { WorldUtils } from "./World/WorldUtils.js"
 import { Terrain } from "./World/Terrain.js"
 import { TileGrid } from './World/TileGrid.js'
-
+import { Perlin } from "./World/Perlin.js"
 
 
 let scene = new THREE.Scene();
 
-let width = 15
-let height = 15
+let width = 150
+let height = 150
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -22,8 +22,10 @@ let renderer = new THREE.WebGLRenderer({ canvas });
  // Set the initial size of the canvas based on the canvas-div
 scene.background = new THREE.Color(0x000000); // Set background color for the scene
 camera.position.z = 5;
+
 camera.rotation.x = THREE.MathUtils.degToRad(40);
 
+let tileRadius = 1.0;
 
 let terrainSize = WorldUtils.calculateTerrainSize(height, width)
 let terrainOrigin = new THREE.Vector2(-Math.sqrt(3)/ 2, -1);
@@ -33,6 +35,10 @@ let terrain = new Terrain(terrainSize.x, terrainSize.y, 10);
 let grid = new TileGrid(width, height, 1.0);
 
 terrain.attatchTileGrid(grid);
+
+let fixedTiles = [new Tile(new THREE.Vector3(), [10, 10], tileRadius, Tile.Type.LAND )];
+
+grid.setFixedTiles(fixedTiles)
 grid.generateHexGrid();
 
 for (let row of grid.grid) {
@@ -41,18 +47,12 @@ for (let row of grid.grid) {
     }
 }
 
+
 grid.lerpTiles(new THREE.Vector3(2.2, 2, 0), (tile) => {return tile.mesh.material.color.g});
 
 /* USE THIS TO DEBUG WITH RED MARKER SPHERES */
-
-let markerPositions = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 3, 0), new THREE.Vector3(0, 6, 0),
-                       new THREE.Vector3(Math.sqrt(3) / 2, 1.5, 0), new THREE.Vector3( Math.sqrt(3) / 2, 4.5, 0), new THREE.Vector3( Math.sqrt(3) / 2, 7.5, 0)
-];
-
-markerPositions = [new THREE.Vector3(Math.sqrt(3) + 0.2, 3, 1)]
-markerPositions.push(WorldUtils.cartesianToNearestHexCenter(new THREE.Vector3(Math.sqrt(3) + 0.5, 3, 0)).add(new THREE.Vector3(0, 0, 2)))
-
-markerPositions = WorldUtils.getHexCentersWithinRadius(new THREE.Vector3(10, 10, 0), 8);
+let markerPositions = []
+//markerPositions = WorldUtils.getHexCentersWithinRadius(new THREE.Vector3(10, 10, 0), 8);
 const markerGeometry = new THREE.SphereGeometry(0.1, 32, 32);  // Small sphere
 const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
 for (let position of markerPositions) {
@@ -69,6 +69,10 @@ terrain.generateTerrainMesh();
 terrain.mesh.position.set(terrainSize.x / 2 + terrainOrigin.x, terrainSize.y / 2 + terrainOrigin.y,  0);
 
 scene.add(terrain.mesh);
+
+camera.position.x = terrainSize.x / 2 + terrainOrigin.x;
+camera.position.y = terrainSize.y / 2 + terrainOrigin.y - 5;
+
 
 const cameraControls = new CameraControls(camera, 0.1);
 

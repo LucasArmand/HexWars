@@ -28,8 +28,8 @@ export class Terrain {
         //console.log(this.tileGrid.cartesianToTile(x, y))
         let tile = this.tileGrid.cartesianToTile(x, y);
         if (tile) {
-          let landHeight = this.tileGrid.hexInterpolate(new THREE.Vector3(x, y, 0), (tile) => {return tile.mesh.material.color.g}, 3);
-          return landHeight * 5// + this.noise.noise(10 * x, 10 * y) * 0.1;;
+          let landHeight = this.tileGrid.hexInterpolate(new THREE.Vector3(x, y, 0), (tile) => {return tile.getHeight()}, 3);
+          return landHeight// + this.noise.noise(10 * x, 10 * y) * 0.1;;
         }
         return 0.0;
         return this.noise.noise(10 * x, 10 * y) * 0.1;
@@ -44,12 +44,13 @@ export class Terrain {
         const geometry = new THREE.PlaneGeometry(this.width, this.height, widthSegments, heightSegments);
 
         const material = new THREE.MeshStandardMaterial({
-            color: 0x116611,
+            vertexColors: true,
            // flatShading: true
         });
 
       // Access the vertices of the geometry and modify the z-value using elevationFunction
       const vertices = geometry.attributes.position;
+      const colors = new Float32Array(vertices.count * 3);
     
       for (let i = 0; i < vertices.count; i++) {
           // Get the current vertex position (x, y)
@@ -61,12 +62,21 @@ export class Terrain {
       
           // Set the z-value based on the elevationFunction(x, y)
           const z = this.elevationFunction(x, y);
-      
+          let tile = this.tileGrid.cartesianToTile(x, y);
+          if (tile) {
+            let color = tile.getColor();
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+          }
           // Update the vertex z position
-            vertices.setZ(i, z);
+          vertices.setZ(i, z);
         }
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
         // Need to notify Three.js that the geometry's vertices have been updated
         vertices.needsUpdate = true;
+        geometry.attributes.color.needsUpdate = true;
 
         // Optionally, recompute normals for correct lighting
         geometry.computeVertexNormals();

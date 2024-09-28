@@ -34,6 +34,11 @@ export class Perlin {
         return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
     }
 
+    normalizedNoise(x, y = 0, z = 0 ) {
+        //return this.noise(x, y, z);
+        return (this.noise(x, y, z)  + 1.0 ) / 2.0;
+    }
+
     noise(x, y = 0, z = 0) {
         const X = Math.floor(x) & 255;
         const Y = Math.floor(y) & 255;

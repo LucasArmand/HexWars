@@ -12,6 +12,26 @@ export class TileGrid {
         this.grid = [];
         this.centersToTiles = {}
         this.terrain = null;
+
+        this.fixedTiles = [];
+        this.generatedTileCount = 0;
+    }
+    
+    setFixedTiles(tiles) {
+        let grid = [];
+        for (let y = 0; y < this.height; y++) {
+            let row = [];
+            for (let x = 0; x < this.width; x++) {
+                row.push(null);
+            }
+            grid.push(row);
+        }
+
+        for (let i = 0; i < tiles.length; i++) {
+            grid[tiles[i].coordinate[0]][tiles[i].coordinate[1]] = tiles[i];
+            this.generatedTileCount += 1;
+        }
+        this.fixedTiles = grid;
     }
 
     /**
@@ -22,15 +42,76 @@ export class TileGrid {
      */
     generateHexGrid() {
         this.grid = [];
+        let noiseOctave = 15;
+        let noiseAmplitude = 5;
+        const MAX_ITERS = 10_000;
+        let iter = 0;
+        const oddNeighborOffsets = [[0, -1], [1, -1], [-1, 0], [1, 0], [0, 1], [1, 1]]
+        const evenNeighborOffsets = [[-1, -1], [0, -1], [-1, 0], [1, 0], [-1, 1], [0, 1]]
+        let freshTiles = [];
         for (let y = 0; y < this.height; y++) {
             let row = [];
             for (let x = 0; x < this.width; x++) {
-                let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(x, y), this.radius);
-                let tile = new Tile(tileCenter, this.radius);
-                tile.mesh.material.color = new THREE.Color(0.0, (this.noise.noise(x * 0.6, y * 0.6) + 1.0) * 0.5, 0);
-                row.push(tile);
+                if (this.fixedTiles[y][x]) {
+                    freshTiles.push(this.fixedTiles[y][x])
+                }
+                row.push(this.fixedTiles[y][x])
             }
             this.grid.push(row);
+        }
+
+        while (this.generatedTileCount < this.width * this.height && iter < MAX_ITERS) {
+            iter += 1;
+            let newFreshTiles = [];
+            for (let tile of freshTiles) {
+
+                let coordinate = tile.coordinate;
+
+                let offsetSet = [];
+                if (coordinate[1] % 2 == 0) {
+                    offsetSet = evenNeighborOffsets;
+                } else {
+                    offsetSet = oddNeighborOffsets;
+                }
+
+                for (let offset of offsetSet) {
+                    let newCoordinate = [coordinate[0] + offset[0], coordinate[1] + offset[1]];   
+                    if (newCoordinate[0] >= 0 && newCoordinate[0] < this.width && newCoordinate[1] >= 0 && newCoordinate[1] < this.height) {         
+                        if (this.grid[newCoordinate[0]][newCoordinate[1]] == null) {
+                            let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(newCoordinate[0], newCoordinate[1]), this.radius);
+                            let newType = null;
+                            if (tile.type == Tile.Type.LAND) {
+                                newType = Math.random() < 0.9 ? Tile.Type.LAND : Tile.Type.WATER;
+                            } 
+                            else if (tile.type == Tile.Type.WATER) {
+                                newType = Math.random() < 0.9 ? Tile.Type.WATER : Tile.Type.LAND;
+                            }
+                            let newTile = new Tile(tileCenter, newCoordinate, this.radius, newType);
+                            this.grid[newCoordinate[0]][newCoordinate[1]] = newTile;
+                            newFreshTiles.push(newTile);
+                        }
+                    }
+                }
+                freshTiles = newFreshTiles;
+            }
+            /*
+            for (let y = 0; y < this.height; y++) {
+                let row = [];
+                for (let x = 0; x < this.width; x++) {
+
+                    let tile = new Tile(tileCenter, this.radius);
+                    if (this.fixedTiles[y][x]) {
+                        tile.height = 2;
+                        tile.mesh.material.color = new THREE.Color(0, 1.0, 0);
+                    } else {
+                        tile.height = 0.1;
+                        tile.mesh.material.color = new THREE.Color(0, 0, 1.0);
+                    }
+                    row.push(tile);
+                }
+                this.grid.push(row);
+            }
+             */
         }
     }
 
