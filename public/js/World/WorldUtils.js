@@ -24,7 +24,6 @@ export class WorldUtils {
         ));
     }
     static getTerrainSize(terrain, radius=1.0) {
-        console.log(terrain.tileGrid.height)
         return WorldUtils.calculateTerrainSize(terrain.tileGrid.height, terrain.tileGrid.width, terrain.tileGrid.radius)
     }
 

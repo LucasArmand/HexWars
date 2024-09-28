@@ -11,11 +11,7 @@ let scene = new THREE.Scene();
 
 let width = 40
 let height = 50;
-//let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-let tileRenderTarget = new THREE.WebGLRenderTarget(width, height); 
-//let camera = new THREE.OrthographicCamera(-width, width, -height, height, 0.1, 20);
-
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
 const canvas = document.querySelector('canvas');
@@ -25,16 +21,8 @@ const canvasDiv = document.querySelector('.canvas-div');
 let renderer = new THREE.WebGLRenderer({ canvas });
  // Set the initial size of the canvas based on the canvas-div
 scene.background = new THREE.Color(0x000000); // Set background color for the scene
-//camera.position.x = width/1.2;
-//camera.position.y = height/Math.sqrt(3);
-//camera.position.z = 5;
-//camera.rotation.z = THREE.MathUtils.degToRad(0);
-//camera.rotation.x = THREE.MathUtils.degToRad(0);
-
-// Create an orthographic camera
-
-// Update the camera projection matrix after setting its properties
-
+camera.position.z = 5;
+camera.rotation.x = THREE.MathUtils.degToRad(0);
 
 
 let terrainSize = WorldUtils.calculateTerrainSize(height, width)
@@ -53,24 +41,12 @@ const marker = new THREE.Mesh(markerGeometry, markerMaterial);
 
 
 
+terrain.hexTexture = grid.renderHexTexture(renderer);
+terrain.generateTerrainMesh();
+
 terrain.mesh.position.set(terrainSize.x / 2 + terrainOrigin.x, terrainSize.y / 2 + terrainOrigin.y,  0);
 
 scene.add(terrain.mesh);
-
-const left = -terrainSize.x / 2;
-const right = terrainSize.x / 2;
-const top = terrainSize.y / 2;
-const bottom = -terrainSize.y / 2;
-const near = 0.1;   // Adjust near plane as needed
-const far = 1000;   // Adjust far plane as needed
-
-
-const camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
-
-// Set camera position and orientation to look at the x-y plane
-camera.position.set(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 10); // Move the camera along the z-axis
-camera.lookAt(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 0);        // Look at the center of the plane
-camera.updateProjectionMatrix();
 
 const cameraControls = new CameraControls(camera, 0.1);
 
