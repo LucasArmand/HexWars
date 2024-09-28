@@ -29,7 +29,7 @@ export class TileGrid {
                 } else {
                     tile.mesh.material.color = new THREE.Color(0, 0, 127);
                 }
-
+                tile.mesh.material.color = new THREE.Color(Math.random(), Math.random(), Math.random());
                 this.grid.push(tile);
             }
         }
@@ -65,6 +65,13 @@ export class TileGrid {
         return tileRenderTarget.texture;
     }
 
-
+    /**
+     * Gets the tile at the given x-y cartesian coordinate
+     * @param {float} x
+     * @param {float} y 
+     */
+    getTileAt(x, y) {
+        let hexCoord = WorldUtils.cartesianToHexagonal()
+    }
     
 }
