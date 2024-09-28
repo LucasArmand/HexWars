@@ -24,7 +24,22 @@ export class WorldUtils {
         ));
     }
 
-    static cartesianToNearestHexCenter(coordinate, radius = 1.0) {
+    static getHexCentersWithinRadius(coordinate, radius) {
+        let min = coordinate.clone().sub(new THREE.Vector3(radius, radius, 0));
+        let max = coordinate.clone().add(new THREE.Vector3(radius, radius, 0));
+        let hexCenters = [];
+        for (let x = Math.floor(min.x / Math.sqrt(3)); x <= Math.ceil(max.x / Math.sqrt(3)); x++) {
+            for (let y = Math.floor(min.y / 1.5); y <= Math.ceil(max.y / 1.5); y++) {
+                let hexCenter = new THREE.Vector3(x * Math.sqrt(3), y * 1.5, 0);
+                if (hexCenter.distanceTo(coordinate) <= radius) {
+                    hexCenters.push(hexCenter);
+                }
+            }
+        }
+        return hexCenters;
+    }
+
+    static getNearestHexCenters(coordinate, radius = 1.0) {
         /*
         * The even rows have hexagon centers at x = sqrt(3) * n and y = 1.5 * n for n >= 0 
         * The odd rows have hexagon centers at x = sqrt(3) * n - sqrt(3) / 2 and y = 1.5 * n for n >= 1
@@ -43,6 +58,7 @@ export class WorldUtils {
         * 2. find the two nearest x-values per row (left and right)
         * 3. return the hex center with the shortest distance
         */
+
         let x = coordinate.x;
         let y = coordinate.y;
 
@@ -72,14 +88,27 @@ export class WorldUtils {
         let rightEvenBound = Math.ceil(x / Math.sqrt(3)) * Math.sqrt(3);
         let rightOddBound = Math.ceil((x - Math.sqrt(3) / 2.0 ) / Math.sqrt(3)) * Math.sqrt(3) + Math.sqrt(3) / 2.0;
 
-        // list all four possible nearest hex centers
-        let points = []
-        points = [new THREE.Vector3(leftEvenBound, evenBound, 0),
+        let points = [new THREE.Vector3(leftEvenBound, evenBound, 0),
                   new THREE.Vector3(rightEvenBound, evenBound, 0),
                   new THREE.Vector3(leftOddBound, oddBound, 0),
                   new THREE.Vector3(rightOddBound, oddBound, 0)
         ]
+        // Calculate distances from the coordinate to each center
+        const distances = points.map(point => point.distanceTo(coordinate));
 
+        // Sort the points by distance
+        const sortedPoints = points
+            .map((point, index) => ({ point, distance: distances[index] }))
+            .sort((a, b) => a.distance - b.distance);
+
+        // Return the three nearest hex centers
+        return sortedPoints.slice(0, 3).map(entry => entry.point);
+
+    }
+
+    static cartesianToNearestHexCenter(coordinate, radius = 1.0) {
+
+        let points = WorldUtils.getNearestHexCenters(coordinate, radius);
         // get closest hex center
         let minDistance = radius;
         let minCenter = null;
@@ -105,5 +134,14 @@ export class WorldUtils {
         }
         return terrainSize;
     }
+    static cubicInterpolation(t, p0, p1, p2, p3) {
+        // Apply cubic Hermite spline interpolation
+        const a0 = -0.5 * p0 + 1.5 * p1 - 1.5 * p2 + 0.5 * p3;
+        const a1 = p0 - 2.5 * p1 + 2 * p2 - 0.5 * p3;
+        const a2 = -0.5 * p0 + 0.5 * p2;
+        const a3 = p1;
     
+        return a0 * Math.pow(t, 3) + a1 * Math.pow(t, 2) + a2 * t + a3;
+    }
+      
 }

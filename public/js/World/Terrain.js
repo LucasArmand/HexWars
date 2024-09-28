@@ -28,7 +28,8 @@ export class Terrain {
         //console.log(this.tileGrid.cartesianToTile(x, y))
         let tile = this.tileGrid.cartesianToTile(x, y);
         if (tile) {
-          return tile.mesh.material.color.r + 0.5;
+          let landHeight = this.tileGrid.hexInterpolate(new THREE.Vector3(x, y, 0), (tile) => {return tile.mesh.material.color.g}, 3);
+          return landHeight * 5// + this.noise.noise(10 * x, 10 * y) * 0.1;;
         }
         return 0.0;
         return this.noise.noise(10 * x, 10 * y) * 0.1;
@@ -44,7 +45,7 @@ export class Terrain {
 
         const material = new THREE.MeshStandardMaterial({
             color: 0x116611,
-            flatShading: true
+           // flatShading: true
         });
 
       // Access the vertices of the geometry and modify the z-value using elevationFunction

@@ -9,8 +9,8 @@ import { TileGrid } from './World/TileGrid.js'
 
 let scene = new THREE.Scene();
 
-let width = 50
-let height = 50;
+let width = 15
+let height = 15
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -22,21 +22,26 @@ let renderer = new THREE.WebGLRenderer({ canvas });
  // Set the initial size of the canvas based on the canvas-div
 scene.background = new THREE.Color(0x000000); // Set background color for the scene
 camera.position.z = 5;
-camera.rotation.x = THREE.MathUtils.degToRad(0);
+camera.rotation.x = THREE.MathUtils.degToRad(40);
 
 
 let terrainSize = WorldUtils.calculateTerrainSize(height, width)
 let terrainOrigin = new THREE.Vector2(-Math.sqrt(3)/ 2, -1);
+
 let terrain = new Terrain(terrainSize.x, terrainSize.y, 10);
+
 let grid = new TileGrid(width, height, 1.0);
+
 terrain.attatchTileGrid(grid);
 grid.generateHexGrid();
+
 for (let row of grid.grid) {
     for (let tile of row) {
         scene.add(tile.mesh);
     }
 }
 
+grid.lerpTiles(new THREE.Vector3(2.2, 2, 0), (tile) => {return tile.mesh.material.color.g});
 
 /* USE THIS TO DEBUG WITH RED MARKER SPHERES */
 
@@ -47,6 +52,7 @@ let markerPositions = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 3, 0), n
 markerPositions = [new THREE.Vector3(Math.sqrt(3) + 0.2, 3, 1)]
 markerPositions.push(WorldUtils.cartesianToNearestHexCenter(new THREE.Vector3(Math.sqrt(3) + 0.5, 3, 0)).add(new THREE.Vector3(0, 0, 2)))
 
+markerPositions = WorldUtils.getHexCentersWithinRadius(new THREE.Vector3(10, 10, 0), 8);
 const markerGeometry = new THREE.SphereGeometry(0.1, 32, 32);  // Small sphere
 const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
 for (let position of markerPositions) {
@@ -54,8 +60,6 @@ for (let position of markerPositions) {
     marker.position.set(position.x, position.y, position.z);
     scene.add(marker)
 }
-
-
 
 
 
