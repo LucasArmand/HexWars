@@ -25,7 +25,12 @@ export class Terrain {
       return new THREE.Vector3(size.x / 2, size.y / 2, 0);
     }
     elevationFunction(x, y) {
-        //return this.tileGrid.getTileAt(x, y);
+        //console.log(this.tileGrid.cartesianToTile(x, y))
+        let tile = this.tileGrid.cartesianToTile(x, y);
+        if (tile) {
+          return tile.mesh.material.color.r + 0.5;
+        }
+        return 0.0;
         return this.noise.noise(10 * x, 10 * y) * 0.1;
     }
 
@@ -47,8 +52,11 @@ export class Terrain {
     
       for (let i = 0; i < vertices.count; i++) {
           // Get the current vertex position (x, y)
-          const x = vertices.getX(i);
-          const y = vertices.getY(i);
+          let x = vertices.getX(i);
+          let y = vertices.getY(i);
+
+          x += this.width / 2 - Math.sqrt(3) / 2;
+          y += this.height / 2 - 1;
       
           // Set the z-value based on the elevationFunction(x, y)
           const z = this.elevationFunction(x, y);

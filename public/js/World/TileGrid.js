@@ -9,6 +9,7 @@ export class TileGrid {
         this.radius = radius;
 
         this.grid = [];
+        this.centersToTiles = {}
         this.terrain = null;
     }
 
@@ -21,6 +22,7 @@ export class TileGrid {
     generateHexGrid() {
         this.grid = [];
         for (let x = 0; x < this.width; x++) {
+            let row = [];
             for (let y = 0; y < this.height; y++) {
                 let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(x, y), this.radius);
                 let tile = new Tile(tileCenter, this.radius);
@@ -30,8 +32,9 @@ export class TileGrid {
                     tile.mesh.material.color = new THREE.Color(0, 0, 127);
                 }
                 tile.mesh.material.color = new THREE.Color(Math.random(), Math.random(), Math.random());
-                this.grid.push(tile);
+                row.push(tile);
             }
+            this.grid.push(row);
         }
     }
 
@@ -57,8 +60,10 @@ export class TileGrid {
         camera.position.set(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 10); // Move the camera along the z-axis
         camera.lookAt(terrainSize.x/2 + terrainOrigin.x, terrainSize.y/2 + terrainOrigin.y, 0);        // Look at the center of the plane
         camera.updateProjectionMatrix();
-        for (let tile of this.grid) {
-            scene.add(tile.mesh.clone());
+        for (let row of this.grid) {
+            for (let tile of row) {
+                scene.add(tile.mesh.clone());
+            }
         }
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);
@@ -67,11 +72,20 @@ export class TileGrid {
 
     /**
      * Gets the tile at the given x-y cartesian coordinate
-     * @param {float} x
-     * @param {float} y 
      */
-    getTileAt(x, y) {
-        let hexCoord = WorldUtils.cartesianToHexagonal()
+    cartesianToTile(x, y) {
+        let coordinate = WorldUtils.cartesianToNearestHexCenter(new THREE.Vector3(x, y, 0));
+        let yIndex = parseInt(Math.round(coordinate.y  / 1.5));
+        let xIndex = null;
+        if (yIndex % 2 == 0) {
+            xIndex = parseInt(Math.round(coordinate.x / (Math.sqrt(3))));
+        } else {
+            xIndex = parseInt(Math.round(coordinate.x / (Math.sqrt(3)))) - 1;
+        }
+        if ((yIndex < 0 || yIndex >= this.height) || (xIndex < 0 || xIndex >= this.width)) {
+            return null;
+        }
+        return this.grid[yIndex][xIndex];
     }
     
 }

@@ -9,8 +9,8 @@ import { TileGrid } from './World/TileGrid.js'
 
 let scene = new THREE.Scene();
 
-let width = 4
-let height = 5;
+let width = 50
+let height = 50;
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -31,26 +31,29 @@ let terrain = new Terrain(terrainSize.x, terrainSize.y, 10);
 let grid = new TileGrid(width, height, 1.0);
 terrain.attatchTileGrid(grid);
 grid.generateHexGrid();
-for (let tile of grid.grid) {
-    scene.add(tile.mesh);
+for (let row of grid.grid) {
+    for (let tile of row) {
+        scene.add(tile.mesh);
+    }
 }
 
 
 /* USE THIS TO DEBUG WITH RED MARKER SPHERES */
 
-//let markerPositions = [new THREE.Vector3(Math.sqrt(3) / 2,1.5,0), new THREE.Vector3(1.5 * Math.sqrt(3), 4.5, 0), new THREE.Vector3(2.5 * Math.sqrt(3), 4.5, 0),
-//                       new THREE.Vector3(1,4.5,0), new THREE.Vector3(3, 4.5, 0), new THREE.Vector3(5, 4.5, 0),
-//];
+let markerPositions = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 3, 0), new THREE.Vector3(0, 6, 0),
+                       new THREE.Vector3(Math.sqrt(3) / 2, 1.5, 0), new THREE.Vector3( Math.sqrt(3) / 2, 4.5, 0), new THREE.Vector3( Math.sqrt(3) / 2, 7.5, 0)
+];
 
-//markerPositions = [WorldUtils.cartesianToHexagonal(new THREE.Vector3(2.5, 4.5, 0))]
-//console.log(markerPositions)
-//const markerGeometry = new THREE.SphereGeometry(0.1, 32, 32);  // Small sphere
-//const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
-//for (let position of markerPositions) {
-//    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-//    marker.position.set(position.x, position.y, position.z);
-//    scene.add(marker)
-//}
+markerPositions = [new THREE.Vector3(Math.sqrt(3) + 0.2, 3, 1)]
+markerPositions.push(WorldUtils.cartesianToNearestHexCenter(new THREE.Vector3(Math.sqrt(3) + 0.5, 3, 0)).add(new THREE.Vector3(0, 0, 2)))
+
+const markerGeometry = new THREE.SphereGeometry(0.1, 32, 32);  // Small sphere
+const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
+for (let position of markerPositions) {
+    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+    marker.position.set(position.x, position.y, position.z);
+    scene.add(marker)
+}
 
 
 
