@@ -48,36 +48,32 @@ export class Tile {
         this.radius = radius;
         this.mesh = this.generateMesh();
         this.height = 0.0;
-        this.type = tileType;
+        this.type = tileType; // this is an int, with the Type object being shorthand to access int values (similar to enum).
 
     }
 
     getHeight() {
-        if (this.type == Tile.Type.LAND) {
-            return 2.0;
-        } else {
-            return 0.5;
-        }
+        return Math.pow(1.6, this.type) / 2 + 0.5
     }
 
     getColor() {
         switch (this.type) {
-            case 0:
+            case Tile.Type.OCEAN:
                 return new THREE.Color(0x1E90FF); // Example ocean color (Dodger Blue)
             
-            case 1:
-                return new THREE.Color(0xADD8E6); // Example coast color (Sandy Brown)
+            case Tile.Type.COAST:
+                return new THREE.Color(0x3EB0FF); // Example coast color (Sandy Brown)
             
-            case 2:
+            case Tile.Type.LOWLANDS:
                 return new THREE.Color(0x32CD32); // Example lowlands color (Lime Green)
             
-            case 3:
+            case Tile.Type.MIDLANDS:
                 return new THREE.Color(0x228B22); // Example midlands color (Forest Green)
             
-            case 4:
+            case Tile.Type.HIGHLANDS:
                 return new THREE.Color(0x8B4513); // Example highlands color (Saddle Brown)
             
-            case 5:
+            case Tile.Type.MOUNTAINS:
                 return new THREE.Color(0xA9A9A9); // Example mountains color (Dark Gray)
             
             default:

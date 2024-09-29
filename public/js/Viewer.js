@@ -5,13 +5,14 @@ import { WorldUtils } from "./World/WorldUtils.js"
 import { Terrain } from "./World/Terrain.js"
 import { TileGrid } from './World/TileGrid.js'
 import { Perlin } from "./World/Perlin.js"
-import { ContinentsGenerator } from './World/Generation/ContinentsGenerator.js';
+import { WaveFunctionGenerator } from './World/Generation/WaveFunctionGenerator.js';
+import { PerlinGenerator } from './World/Generation/PerlinGenerator.js';
 
 
 let scene = new THREE.Scene();
 
-let width = 40
-let height = 40
+let width = 50
+let height = 50
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -37,19 +38,34 @@ let grid = new TileGrid(width, height, 1.0);
 
 terrain.attatchTileGrid(grid);
 
-let fixedTiles = [new Tile(new THREE.Vector3(), [20, 20], tileRadius, Tile.Type.MIDLANDS )];
-
+let fixedTiles = [new Tile(new THREE.Vector3(), [2, 2], tileRadius, Tile.Type.MIDLANDS )];
+for (let y = 0; y < height; y++) {
+    fixedTiles.push(new Tile(new THREE.Vector3(), [0, y], tileRadius, Tile.Type.OCEAN ))
+    fixedTiles.push(new Tile(new THREE.Vector3(), [width - 1, y], tileRadius, Tile.Type.OCEAN ))
+}
+for (let x = 1; x < width - 1; x++) {
+    fixedTiles.push(new Tile(new THREE.Vector3(), [x, 0], tileRadius, Tile.Type.OCEAN ))
+    fixedTiles.push(new Tile(new THREE.Vector3(), [x, height - 1], tileRadius, Tile.Type.OCEAN ))
+}
 grid.setFixedTiles(fixedTiles)
 
-let generator = new ContinentsGenerator();
-grid.generateHexGrid(generator);
+let noiseFunctions = [
+    {
+        octave: -6,
+        amplitude: 4,
+        sigma: 1,
+        offset: 2
+    }
+]
 
+//let generator = new PerlinGenerator(noiseFunctions);
+let generator = new WaveFunctionGenerator();
+grid.generateHexGrid(generator);
 for (let row of grid.grid) {
     for (let tile of row) {
         scene.add(tile.mesh);
     }
 }
-
 
 grid.lerpTiles(new THREE.Vector3(2.2, 2, 0), (tile) => {return tile.mesh.material.color.g});
 

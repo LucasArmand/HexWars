@@ -50,63 +50,9 @@ export class TileGrid {
      * @param {*} radius radius of hexagonal tiles
      */
     generateHexGrid(generator) {
-        this.grid = [];
-        const MAX_ITERS = 10_000;
-        let iter = 0;
-        const oddNeighborOffsets = [[0, -1], [1, -1], [-1, 0], [1, 0], [0, 1], [1, 1]]
-        const evenNeighborOffsets = [[-1, -1], [0, -1], [-1, 0], [1, 0], [-1, 1], [0, 1]]
-        let freshTiles = [];
-        for (let y = 0; y < this.height; y++) {
-            let row = [];
-            for (let x = 0; x < this.width; x++) {
-                if (this.fixedTiles[y][x]) {
-                    freshTiles.push(this.fixedTiles[y][x])
-                }
-                row.push(this.fixedTiles[y][x])
-            }
-            this.grid.push(row);
-        }
+        this.grid = generator.generateHexGrid(this);
+        return;
 
-        while (this.generatedTileCount < this.width * this.height && iter < MAX_ITERS) {
-            iter += 1;
-            let newFreshTiles = [];
-            let newCoordinates = [];
-            let adjacentTiles = [];
-            for (let tile of freshTiles) {
-
-                let coordinate = tile.coordinate;
-
-                let offsetSet = [];
-                if (coordinate[1] % 2 == 0) {
-                    offsetSet = evenNeighborOffsets;
-                } else {
-                    offsetSet = oddNeighborOffsets;
-                }
-
-                for (let offset of offsetSet) {
-                    let newCoordinate = [coordinate[0] + offset[0], coordinate[1] + offset[1]];   
-                    if (newCoordinate[0] >= 0 && newCoordinate[0] < this.width && newCoordinate[1] >= 0 && newCoordinate[1] < this.height) {         
-                        if (this.grid[newCoordinate[0]][newCoordinate[1]] == null) {
-                            if (!newCoordinate.includes(newCoordinate)) { 
-                                newCoordinates.push(newCoordinate)
-                                let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(newCoordinate[0], newCoordinate[1]), this.radius);
-                                this.grid[newCoordinate[0]][newCoordinate[1]] = new PseudoTile(tileCenter, newCoordinate, this.radius);
-                            }
-                            this.grid[newCoordinate[0]][newCoordinate[1]].addAdjacentTile(tile, coordinate);
-                        }
-                    }
-                }
-            }
-            newCoordinates = this.shuffleArray(newCoordinates);
-            for (let newCoordinate of newCoordinates) {
-                let pseudoTile = this.grid[newCoordinate[0]][newCoordinate[1]];
-                //console.log(pseudoTile)
-                let newTile = generator.generateTile(pseudoTile);
-                this.grid[newCoordinate[0]][newCoordinate[1]] = newTile;
-                newFreshTiles.push(newTile);
-            }
-            freshTiles = newFreshTiles;    
-        }
     }
 
     renderHexTexture(renderer) {

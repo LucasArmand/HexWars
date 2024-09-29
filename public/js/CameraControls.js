@@ -30,7 +30,14 @@ export class CameraControls {
             case 'KeyD':
                 this.moveRight = true;
                 break;
+            case 'Space':
+                this.moveUp = true;
+                break;
+            case 'KeyC':
+                this.moveDown = true;
+                break;
         }
+        
     }
 
     // Handle keyup events
@@ -48,6 +55,12 @@ export class CameraControls {
             case 'KeyD':
                 this.moveRight = false;
                 break;
+            case 'Space':
+                this.moveUp = false;
+                break;
+            case 'KeyC':
+                this.moveDown = false;
+                break;
         }
     }
 
@@ -57,6 +70,8 @@ export class CameraControls {
         if (this.moveBackward) this.camera.position.y -= this.cameraSpeed;
         if (this.moveLeft) this.camera.position.x -= this.cameraSpeed;
         if (this.moveRight) this.camera.position.x += this.cameraSpeed;
+        if (this.moveUp) this.camera.position.z += this.cameraSpeed;
+        if (this.moveDown) this.camera.position.z -= this.cameraSpeed;
     }
 
     // Function to get the current camera position

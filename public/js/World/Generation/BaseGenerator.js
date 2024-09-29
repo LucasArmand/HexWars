@@ -29,5 +29,10 @@ export class BaseGenerator {
     generateTile(pseudoTile) {
       throw new Error("Method 'generateTile(pseudoTile)' must be implemented");
     }
+
+    //Abstract method
+    generateHexGrid() {
+      throw new Error("Method 'generateHexGrid()' music be implemented")
+    }
   }
   
