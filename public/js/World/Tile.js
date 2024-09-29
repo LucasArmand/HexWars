@@ -24,9 +24,22 @@ export class Tile {
     ]
 
     static Type = Object.freeze({
-        WATER: 'WATER',
-        LAND: 'LAND'
+        OCEAN: 0,
+        COAST: 1,
+        LOWLANDS: 2,
+        MIDLANDS: 3,
+        HIGHLANDS: 4,
+        MOUNTAINS: 5
       });
+
+    static getTypeFromInt(value) {
+        for (const key in Tile.Type) {
+          if (Tile.Type[key] === value) {
+            return { name: key, value: value };
+          }
+        }
+        throw new Error("Invalid integer for Type");
+    }
       
 
     constructor(position = new THREE.Vector3(0,0,0), coordinate=[0,0], radius=1.0, tileType=Tile.Type.LAND) {
@@ -48,12 +61,30 @@ export class Tile {
     }
 
     getColor() {
-        if (this.type == Tile.Type.LAND) {
-            return new THREE.Color(0, 127, 0);
-        } else {
-            return new THREE.Color(0, 0, 127);
+        switch (this.type) {
+            case 0:
+                return new THREE.Color(0x1E90FF); // Example ocean color (Dodger Blue)
+            
+            case 1:
+                return new THREE.Color(0xADD8E6); // Example coast color (Sandy Brown)
+            
+            case 2:
+                return new THREE.Color(0x32CD32); // Example lowlands color (Lime Green)
+            
+            case 3:
+                return new THREE.Color(0x228B22); // Example midlands color (Forest Green)
+            
+            case 4:
+                return new THREE.Color(0x8B4513); // Example highlands color (Saddle Brown)
+            
+            case 5:
+                return new THREE.Color(0xA9A9A9); // Example mountains color (Dark Gray)
+            
+            default:
+                return new THREE.Color(0x000000); // Fallback color (Black) for unknown types
         }
     }
+  
 
     generateMesh() {
         let vertices = [];

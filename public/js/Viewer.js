@@ -5,12 +5,13 @@ import { WorldUtils } from "./World/WorldUtils.js"
 import { Terrain } from "./World/Terrain.js"
 import { TileGrid } from './World/TileGrid.js'
 import { Perlin } from "./World/Perlin.js"
+import { ContinentsGenerator } from './World/Generation/ContinentsGenerator.js';
 
 
 let scene = new THREE.Scene();
 
-let width = 150
-let height = 150
+let width = 40
+let height = 40
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -36,10 +37,12 @@ let grid = new TileGrid(width, height, 1.0);
 
 terrain.attatchTileGrid(grid);
 
-let fixedTiles = [new Tile(new THREE.Vector3(), [10, 10], tileRadius, Tile.Type.LAND )];
+let fixedTiles = [new Tile(new THREE.Vector3(), [20, 20], tileRadius, Tile.Type.MIDLANDS )];
 
 grid.setFixedTiles(fixedTiles)
-grid.generateHexGrid();
+
+let generator = new ContinentsGenerator();
+grid.generateHexGrid(generator);
 
 for (let row of grid.grid) {
     for (let tile of row) {

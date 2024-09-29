@@ -2,6 +2,8 @@ import * as THREE from '../three.module.js'
 import { WorldUtils } from './WorldUtils.js';
 import { Tile } from './Tile.js';
 import { Perlin } from "./Perlin.js"
+import { PseudoTile } from './PseudoTile.js';
+
 export class TileGrid {
 
     constructor(width, height, radius=1.0) {
@@ -33,6 +35,13 @@ export class TileGrid {
         }
         this.fixedTiles = grid;
     }
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));  // Random index between 0 and i
+          [array[i], array[j]] = [array[j], array[i]];    // Swap elements
+        }
+        return array;
+      }
 
     /**
      * Returns an array of hex Tiles arranged in a rectangular grid  
@@ -40,10 +49,8 @@ export class TileGrid {
      * @param {*} height height of grid
      * @param {*} radius radius of hexagonal tiles
      */
-    generateHexGrid() {
+    generateHexGrid(generator) {
         this.grid = [];
-        let noiseOctave = 15;
-        let noiseAmplitude = 5;
         const MAX_ITERS = 10_000;
         let iter = 0;
         const oddNeighborOffsets = [[0, -1], [1, -1], [-1, 0], [1, 0], [0, 1], [1, 1]]
@@ -63,6 +70,8 @@ export class TileGrid {
         while (this.generatedTileCount < this.width * this.height && iter < MAX_ITERS) {
             iter += 1;
             let newFreshTiles = [];
+            let newCoordinates = [];
+            let adjacentTiles = [];
             for (let tile of freshTiles) {
 
                 let coordinate = tile.coordinate;
@@ -78,40 +87,25 @@ export class TileGrid {
                     let newCoordinate = [coordinate[0] + offset[0], coordinate[1] + offset[1]];   
                     if (newCoordinate[0] >= 0 && newCoordinate[0] < this.width && newCoordinate[1] >= 0 && newCoordinate[1] < this.height) {         
                         if (this.grid[newCoordinate[0]][newCoordinate[1]] == null) {
-                            let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(newCoordinate[0], newCoordinate[1]), this.radius);
-                            let newType = null;
-                            if (tile.type == Tile.Type.LAND) {
-                                newType = Math.random() < 0.9 ? Tile.Type.LAND : Tile.Type.WATER;
-                            } 
-                            else if (tile.type == Tile.Type.WATER) {
-                                newType = Math.random() < 0.9 ? Tile.Type.WATER : Tile.Type.LAND;
+                            if (!newCoordinate.includes(newCoordinate)) { 
+                                newCoordinates.push(newCoordinate)
+                                let tileCenter = WorldUtils.hexagonalToCartesian(new THREE.Vector2(newCoordinate[0], newCoordinate[1]), this.radius);
+                                this.grid[newCoordinate[0]][newCoordinate[1]] = new PseudoTile(tileCenter, newCoordinate, this.radius);
                             }
-                            let newTile = new Tile(tileCenter, newCoordinate, this.radius, newType);
-                            this.grid[newCoordinate[0]][newCoordinate[1]] = newTile;
-                            newFreshTiles.push(newTile);
+                            this.grid[newCoordinate[0]][newCoordinate[1]].addAdjacentTile(tile, coordinate);
                         }
                     }
                 }
-                freshTiles = newFreshTiles;
             }
-            /*
-            for (let y = 0; y < this.height; y++) {
-                let row = [];
-                for (let x = 0; x < this.width; x++) {
-
-                    let tile = new Tile(tileCenter, this.radius);
-                    if (this.fixedTiles[y][x]) {
-                        tile.height = 2;
-                        tile.mesh.material.color = new THREE.Color(0, 1.0, 0);
-                    } else {
-                        tile.height = 0.1;
-                        tile.mesh.material.color = new THREE.Color(0, 0, 1.0);
-                    }
-                    row.push(tile);
-                }
-                this.grid.push(row);
+            newCoordinates = this.shuffleArray(newCoordinates);
+            for (let newCoordinate of newCoordinates) {
+                let pseudoTile = this.grid[newCoordinate[0]][newCoordinate[1]];
+                //console.log(pseudoTile)
+                let newTile = generator.generateTile(pseudoTile);
+                this.grid[newCoordinate[0]][newCoordinate[1]] = newTile;
+                newFreshTiles.push(newTile);
             }
-             */
+            freshTiles = newFreshTiles;    
         }
     }
 
