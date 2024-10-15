@@ -62,7 +62,7 @@ function getSubtriangles(tri, level) {
 }
 
 
-function generateHexTris(position) {
+function generateHexTris(position, level) {
     const vertices = [];
     const triangles = [];
     for (let i = 0; i < Tile.HEX_VERTICES.length; i+= 9) {
@@ -74,7 +74,7 @@ function generateHexTris(position) {
         triangle.a.add(position);
         triangle.b.add(position);
         triangle.c.add(position);
-        triangles.push(...getSubtriangles(triangle, 2));
+        triangles.push(...getSubtriangles(triangle, level));
     }
     for (let tri of triangles) {
         vertices.push(...tri.a, ...tri.b, ...tri.c);
@@ -82,7 +82,7 @@ function generateHexTris(position) {
     return vertices
 }
 
-function generateHexTerrainMesh(width, height) {
+function generateHexTerrainMesh(width, height, level) {
     const vertices = [];
     let rowAxis = new THREE.Vector3(1, 0, 0);
     let colAxis = new THREE.Vector3(0.5, Math.sqrt(3) / 2.0, 0);
@@ -98,22 +98,14 @@ function generateHexTerrainMesh(width, height) {
             let position = origin
                     .add(rowAxis.clone().multiplyScalar(coordinate.x * radius * Math.sqrt(3))
                     .add(colAxis.clone().multiplyScalar(coordinate.y * radius * Math.sqrt(3))));
-            vertices.push(...generateHexTris(position))
+            vertices.push(...generateHexTris(position, level))
         }
     }
     return vertices;    
 }
 
+const vertices = new Float32Array(generateHexTerrainMesh(50, 50, 3));
 
-const triangle = new THREE.Triangle(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0));
-
-const vertices = new Float32Array(generateHexTerrainMesh(50, 50));
-const indices = [
-	0, 1, 2,
-	2, 3, 0,
-];
-
-//geometry.setIndex( indices );
 early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
 console.log(early_geometry.attributes.position.count)
