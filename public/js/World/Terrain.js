@@ -28,7 +28,7 @@ export class Terrain {
         //console.log(this.tileGrid.cartesianToTile(x, y))
         let tile = this.tileGrid.cartesianToTile(x, y);
         if (tile) {
-          let landHeight = this.tileGrid.hexInterpolate(new THREE.Vector3(x, y, 0), (tile) => {return tile.getHeight()}, 3);
+          let landHeight = 1//this.tileGrid.hexInterpolate(new THREE.Vector3(x, y, 0), (tile) => {return 1}, 3);
           return landHeight// + this.noise.noise(10 * x, 10 * y) * 0.1;;
         }
         return 0.0;
@@ -64,8 +64,7 @@ export class Terrain {
           const z = this.elevationFunction(x, y);
           let tile = this.tileGrid.cartesianToTile(x, y);
           if (tile) {
-            let color = tile.getColor();
-            colors[i * 3] = color.r;
+            colors[i * 3] = color.r; 
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
           }

@@ -106,6 +106,8 @@ export class TileGrid {
         return this.grid[yIndex][xIndex];
     }
 
+    
+    /*
     hexInterpolate(coordinate, propertyGenerator, radius) {
         // Get all hex centers within the specified radius
         let hexCenters = WorldUtils.getHexCentersWithinRadius(coordinate, radius);
@@ -173,6 +175,7 @@ export class TileGrid {
         interpolatedValue /= totalWeight;
         return interpolatedValue;
     }
+    */
     
     
 

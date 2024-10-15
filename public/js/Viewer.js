@@ -11,8 +11,8 @@ import { PerlinGenerator } from './World/Generation/PerlinGenerator.js';
 
 let scene = new THREE.Scene();
 
-let width = 50
-let height = 50
+let width = 5
+let height = 5
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
