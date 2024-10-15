@@ -39,7 +39,7 @@ const RT3 = Math.sqrt(3)
 
 const vertices_arr = []; //new Float32Array( Tile.HEX_VERTICES );
 
-function getSubtriangles(tri, level) {
+function getSubtriangles(tri, level, triValues) {
     if (level == 0) {
         return [tri];
     }
@@ -61,20 +61,63 @@ function getSubtriangles(tri, level) {
     }    
 }
 
+function interpolateValues(values, coordinate, offsetSet, index) {
+    const present = [values[coordinate.x][coordinate.y]];
+    if (values[coordinate.x + offsetSet[index][0]] != null && values[coordinate.x + offsetSet[index][0]][coordinate.y + offsetSet[index][1]] != null) {
+        present.push(values[coordinate.x + offsetSet[index][0]][coordinate.y + offsetSet[index][1]]);
+    }
+    if (values[coordinate.x + offsetSet[(index + 1) % 6][0]] != null && values[coordinate.x + offsetSet[(index + 1) % 6][0]][coordinate.y + offsetSet[(index + 1) % 6][1]] != null) {
+        present.push(values[coordinate.x + offsetSet[(index + 1) % 6][0]][coordinate.y + offsetSet[(index + 1) % 6][1]]);
+    }
+    let sum = 0
+    for (let v of present) {
+        sum += v;
+    }
+    return sum / present.length;
+}
 
-function generateHexTris(position, level) {
+function generateHexTris(position, coordinate, level) {
     const vertices = [];
     const triangles = [];
+    // These start from the upper-right neighbor and go clockwise. ORDER MATTERS
+    const oddNeighborOffsets = [[1, 1],[1, 0], [1, -1], [0, -1], [-1, 0], [0, 1]]
+    const evenNeighborOffsets = [[0, 1], [1, 0], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
+    const values = [[1,0,0,0,0],
+                    [0,0,0,1,1],
+                    [0,0,0,3,1],
+                    [0,1,1,2,0],
+                    [0,0,1,0,0]];
+    let offsetSet;
+    if (coordinate.y % 2 == 0) {
+        offsetSet = evenNeighborOffsets;
+    } else {
+        offsetSet = oddNeighborOffsets;
+    }
+    let interpolatedValues = [];
+    for (let i = 0; i < 6; i++) {
+        interpolatedValues.push(interpolateValues(values, coordinate, offsetSet, i));// Middle, Upper Right, Right
+    }
+    console.log(coordinate, interpolatedValues)
+    //interpolatedValues[3] = 1;
+
     for (let i = 0; i < Tile.HEX_VERTICES.length; i+= 9) {
         let triangle = new THREE.Triangle(
             new THREE.Vector3(Tile.HEX_VERTICES[i],Tile.HEX_VERTICES[i + 1], Tile.HEX_VERTICES[i + 2]),
-            new THREE.Vector3(Tile.HEX_VERTICES[i + 3],Tile.HEX_VERTICES[i + 4], Tile.HEX_VERTICES[i + 5]),
+            new THREE.Vector3(Tile.HEX_VERTICES[i + 3], Tile.HEX_VERTICES[i + 4], Tile.HEX_VERTICES[i + 5]),
             new THREE.Vector3(Tile.HEX_VERTICES[i + 6],Tile.HEX_VERTICES[i + 7], Tile.HEX_VERTICES[i + 8])
         )
+        let offsetSet;
+        // This is the value for a, b, and c of the triangle
+        let triIndex = Math.round(i/9);
+        let triValues = [values[coordinate.x][coordinate.y], interpolatedValues[triIndex],interpolatedValues[(triIndex + 1) % 6]]
+        let up = new THREE.Vector3(0, 0, 0.3);
         triangle.a.add(position);
+        triangle.a.add(up.clone().multiplyScalar(triValues[0]))
         triangle.b.add(position);
+        triangle.b.add(up.clone().multiplyScalar(triValues[1]))
         triangle.c.add(position);
-        triangles.push(...getSubtriangles(triangle, level));
+        triangle.c.add(up.clone().multiplyScalar(triValues[2]))
+        triangles.push(...getSubtriangles(triangle, level, triValues));
     }
     for (let tri of triangles) {
         vertices.push(...tri.a, ...tri.b, ...tri.c);
@@ -98,13 +141,13 @@ function generateHexTerrainMesh(width, height, level) {
             let position = origin
                     .add(rowAxis.clone().multiplyScalar(coordinate.x * radius * Math.sqrt(3))
                     .add(colAxis.clone().multiplyScalar(coordinate.y * radius * Math.sqrt(3))));
-            vertices.push(...generateHexTris(position, level))
+            vertices.push(...generateHexTris(position, coordinate, level))
         }
     }
     return vertices;    
 }
 
-const vertices = new Float32Array(generateHexTerrainMesh(50, 50, 3));
+const vertices = new Float32Array(generateHexTerrainMesh(5,5, 0));
 
 early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
