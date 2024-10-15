@@ -12,8 +12,6 @@ import * as BufferGeometryUtils from './BufferGeometryUtils.js'
 
 let scene = new THREE.Scene();
 
-let width = 5
-let height = 5
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 // Get the canvas element and its parent div
@@ -76,17 +74,12 @@ function interpolateValues(values, coordinate, offsetSet, index) {
     return sum / present.length;
 }
 
-function generateHexTris(position, coordinate, level) {
+function generateHexTris(position, coordinate, level, values) {
     const vertices = [];
     const triangles = [];
     // These start from the upper-right neighbor and go clockwise. ORDER MATTERS
     const oddNeighborOffsets = [[1, 1],[1, 0], [1, -1], [0, -1], [-1, 0], [0, 1]]
     const evenNeighborOffsets = [[0, 1], [1, 0], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
-    const values = [[1,0,0,0,0],
-                    [0,0,0,1,1],
-                    [0,0,0,3,1],
-                    [0,1,1,2,0],
-                    [0,0,1,0,0]];
     let offsetSet;
     if (coordinate.y % 2 == 0) {
         offsetSet = evenNeighborOffsets;
@@ -97,8 +90,6 @@ function generateHexTris(position, coordinate, level) {
     for (let i = 0; i < 6; i++) {
         interpolatedValues.push(interpolateValues(values, coordinate, offsetSet, i));// Middle, Upper Right, Right
     }
-    console.log(coordinate, interpolatedValues)
-    //interpolatedValues[3] = 1;
 
     for (let i = 0; i < Tile.HEX_VERTICES.length; i+= 9) {
         let triangle = new THREE.Triangle(
@@ -125,7 +116,7 @@ function generateHexTris(position, coordinate, level) {
     return vertices
 }
 
-function generateHexTerrainMesh(width, height, level) {
+function generateHexTerrainMesh(width, height, level, values) {
     const vertices = [];
     let rowAxis = new THREE.Vector3(1, 0, 0);
     let colAxis = new THREE.Vector3(0.5, Math.sqrt(3) / 2.0, 0);
@@ -141,13 +132,24 @@ function generateHexTerrainMesh(width, height, level) {
             let position = origin
                     .add(rowAxis.clone().multiplyScalar(coordinate.x * radius * Math.sqrt(3))
                     .add(colAxis.clone().multiplyScalar(coordinate.y * radius * Math.sqrt(3))));
-            vertices.push(...generateHexTris(position, coordinate, level))
+            vertices.push(...generateHexTris(position, coordinate, level, values))
         }
     }
     return vertices;    
 }
-
-const vertices = new Float32Array(generateHexTerrainMesh(5,5, 0));
+let width = 20;
+let height = 20;
+let noise = new Perlin();
+let values = []
+for (let i = 0; i < width; i++){
+    let row = [];
+    for (let j = 0; j < height; j++) {
+        row.push(noise.noise((i * 5) / width, (j * 5) / height) * 10);
+    }
+    values.push(row);
+}
+console.log(values)
+const vertices = new Float32Array(generateHexTerrainMesh(width, height, 1, values));
 
 early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
