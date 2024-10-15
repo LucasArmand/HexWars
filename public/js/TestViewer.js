@@ -37,23 +37,41 @@ const RT3 = Math.sqrt(3)
 
 const vertices_arr = []; //new Float32Array( Tile.HEX_VERTICES );
 
-function getSubtriangles(tri, level, triValues) {
-    if (level == 0) {
+function getSubtriangles(tri, level, sample_level, triValues) {
+    if (level == 0 || (triValues[0] == 0 && triValues[1] == 0 && triValues[2] == 0)) {
         return [tri];
     }
     else {
         let ab = tri.a.clone().lerp(tri.b, 0.5);
         let bc = tri.b.clone().lerp(tri.c, 0.5);
         let ca = tri.c.clone().lerp(tri.a, 0.5);
-    
+
+        let ab_value = (triValues[0] + triValues[1]) / 2;
+        let bc_value = (triValues[1] + triValues[2]) / 2;
+        let ca_value = (triValues[2] + triValues[0]) / 2;
+
+        if (sample_level > 0) {
+            ab.z = landHeight(ab.x, ab.y) * ab_value;
+            bc.z = landHeight(bc.x, bc.y) * bc_value;
+            ca.z = landHeight(ca.x, ca.y) * ca_value;
+        }
+       
         let a_tri = new THREE.Triangle(tri.a, ab, ca);
         let b_tri = new THREE.Triangle(ab, tri.b, bc);
         let c_tri = new THREE.Triangle(ca, bc, tri.c);
         let mid_tri = new THREE.Triangle(ab, bc, ca);
+
+        let a_tri_values = [triValues[0], ab_value, ca_value];
+        let b_tri_values = [ab_value, triValues[1], bc_value];
+        let c_tri_values = [ca_value, bc_value, triValues[2]];
+        let mid_tri_values = [ab_value, bc_value, ca_value];
+
         const triangles = [a_tri, b_tri, c_tri, mid_tri]; 
+        const values = [a_tri_values, b_tri_values, c_tri_values, mid_tri_values];
+
         const subtriangles = [];
-        for (let tri of triangles) {
-            subtriangles.push(...getSubtriangles(tri, level - 1))
+        for (let i = 0; i < 4; i++) {
+            subtriangles.push(...getSubtriangles(triangles[i], level - 1, sample_level - 1, values[i]))
         }
         return subtriangles;
     }    
@@ -103,12 +121,15 @@ function generateHexTris(position, coordinate, level, values) {
         let triValues = [values[coordinate.x][coordinate.y], interpolatedValues[triIndex],interpolatedValues[(triIndex + 1) % 6]]
         let up = new THREE.Vector3(0, 0, 0.3);
         triangle.a.add(position);
-        triangle.a.add(up.clone().multiplyScalar(triValues[0]))
+        triangle.a.z = landHeight(triangle.a.x, triangle.a.y) * triValues[0]
+        //triangle.a.add(up.clone().multiplyScalar(triValues[0]))
         triangle.b.add(position);
-        triangle.b.add(up.clone().multiplyScalar(triValues[1]))
+        triangle.b.z = landHeight(triangle.b.x, triangle.b.y) * triValues[1]
+        //triangle.b.add(up.clone().multiplyScalar(triValues[1]))
         triangle.c.add(position);
-        triangle.c.add(up.clone().multiplyScalar(triValues[2]))
-        triangles.push(...getSubtriangles(triangle, level, triValues));
+        triangle.c.z = landHeight(triangle.c.x, triangle.c.y) * triValues[2]
+        //triangle.c.add(up.clone().multiplyScalar(triValues[2]))
+        triangles.push(...getSubtriangles(triangle, level, level, triValues));
     }
     for (let tri of triangles) {
         vertices.push(...tri.a, ...tri.b, ...tri.c);
@@ -137,19 +158,32 @@ function generateHexTerrainMesh(width, height, level, values) {
     }
     return vertices;    
 }
-let width = 20;
-let height = 20;
+let width = 100;
+let height = 100;
+let level = 2;
 let noise = new Perlin();
 let values = []
+function isLand(i, j) {
+    let low_detail = noise.noise(i / (Math.PI * 16), j / (Math.PI * 16)) * 10;
+    let mid_detail = noise.noise(i / (Math.PI * 8), j / (Math.PI * 8)) * 5;
+    let high_detail = noise.noise(i / (Math.PI * 4), j / (Math.PI * 4)) * 2;
+    return Math.min(Math.max(low_detail + mid_detail + high_detail, 0), 1);
+}
+function landHeight(i, j) {
+    let low_detail = noise.noise(i / (Math.PI * 4), j / (Math.PI * 4)) * 4 + 4;
+    let mid_detail = noise.noise(i / (Math.PI * 2), j / (Math.PI * 2)) * 2 + 2;
+    let high_detail = noise.noise(i / (Math.PI * 1), j / (Math.PI * 1)) * 1 + 1;
+    return (low_detail + mid_detail + high_detail) / 3;
+}
 for (let i = 0; i < width; i++){
     let row = [];
     for (let j = 0; j < height; j++) {
-        row.push(noise.noise((i * 5) / width, (j * 5) / height) * 10);
+        row.push(isLand(i, j));
     }
     values.push(row);
 }
 console.log(values)
-const vertices = new Float32Array(generateHexTerrainMesh(width, height, 1, values));
+const vertices = new Float32Array(generateHexTerrainMesh(width, height, level, values));
 
 early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
