@@ -137,7 +137,7 @@ function generateHexTris(position, coordinate, level, values) {
     return vertices
 }
 
-function generateHexTerrainMesh(width, height, level, values) {
+function generateHexTerrainMesh(width, height, level, sample_level, values) {
     const vertices = [];
     let rowAxis = new THREE.Vector3(1, 0, 0);
     let colAxis = new THREE.Vector3(0.5, Math.sqrt(3) / 2.0, 0);
@@ -167,13 +167,13 @@ function isLand(i, j) {
     let low_detail = noise.noise(i / (Math.PI * 16), j / (Math.PI * 16)) * 10;
     let mid_detail = noise.noise(i / (Math.PI * 8), j / (Math.PI * 8)) * 5;
     let high_detail = noise.noise(i / (Math.PI * 4), j / (Math.PI * 4)) * 2;
-    return Math.min(Math.max(low_detail + mid_detail + high_detail, 0), 1);
+    return THREE.MathUtils.smootherstep(low_detail + mid_detail + high_detail, 0, 1);
 }
 function landHeight(i, j) {
     let low_detail = noise.noise(i / (Math.PI * 4), j / (Math.PI * 4)) * 4 + 4;
     let mid_detail = noise.noise(i / (Math.PI * 2), j / (Math.PI * 2)) * 2 + 2;
     let high_detail = noise.noise(i / (Math.PI * 1), j / (Math.PI * 1)) * 1 + 1;
-    return (low_detail + mid_detail + high_detail) / 3;
+    return (low_detail + mid_detail + high_detail) / 4;
 }
 for (let i = 0; i < width; i++){
     let row = [];
@@ -183,7 +183,7 @@ for (let i = 0; i < width; i++){
     values.push(row);
 }
 console.log(values)
-const vertices = new Float32Array(generateHexTerrainMesh(width, height, level, values));
+const vertices = new Float32Array(generateHexTerrainMesh(width, height, level, level-1, values));
 
 early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
@@ -195,7 +195,6 @@ const material = new THREE.MeshBasicMaterial( { color: 0xff0000 , wireframe: tru
 const mesh = new THREE.Mesh( geometry, material );
 
 scene.add(mesh)
-
 
 const cameraControls = new CameraControls(camera, 0.1);
 
