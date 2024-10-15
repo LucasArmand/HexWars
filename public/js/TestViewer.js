@@ -7,6 +7,7 @@ import { TileGrid } from './World/TileGrid.js'
 import { Perlin } from "./World/Perlin.js"
 import { WaveFunctionGenerator } from './World/Generation/WaveFunctionGenerator.js';
 import { PerlinGenerator } from './World/Generation/PerlinGenerator.js';
+import * as BufferGeometryUtils from './BufferGeometryUtils.js'
 
 
 let scene = new THREE.Scene();
@@ -29,7 +30,7 @@ camera.position.y = -5;
 camera.rotation.x = THREE.MathUtils.degToRad(40);
 
 
-const geometry = new THREE.BufferGeometry();
+const early_geometry = new THREE.BufferGeometry();
 
 
 let radius = 1;
@@ -98,7 +99,11 @@ const indices = [
 ];
 
 //geometry.setIndex( indices );
-geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+early_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+
+console.log(early_geometry.attributes.position.count)
+const geometry = BufferGeometryUtils.mergeVertices(early_geometry)
+console.log(geometry.attributes.position.count)
 
 const material = new THREE.MeshBasicMaterial( { color: 0xff0000 , wireframe: true} );
 const mesh = new THREE.Mesh( geometry, material );
